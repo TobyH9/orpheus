@@ -8,36 +8,39 @@ import lightning as pl
 from omegaconf import DictConfig
 
 
-
-
 class CollateFn:
-    def __init__(self, 
-        char_to_int: dict,
-        int_to_char: dict # unnecessary right now
-        ):
+
+    def __init__(self, char_to_int: dict, int_to_char: dict):
         self.char_to_int = char_to_int
         self.int_to_char = int_to_char
 
     def __call__(self, batch):
         # batch: List[Tuple[List[str], List[str]]]
-        input_batch  = torch.stack([self.convert(x) for x, _ in batch])  # (B, block_size)
-        output_batch = torch.stack([self.convert(y) for _, y in batch])  # (B, block_size)
+        input_batch = torch.stack(
+            [self.convert_to_integers(x) for x, _ in batch]
+        )  # (B, block_size)
+        output_batch = torch.stack(
+            [self.convert_to_integers(y) for _, y in batch]
+        )  # (B, block_size)
 
         return input_batch, output_batch
 
-    def convert(self, seq):
+    def convert_to_integers(self, seq):
         # map each char to an int and make a 1D LongTensor
         return torch.tensor([self.char_to_int[char] for char in seq], dtype=torch.long)
-        
+
+    def convert_to_characters(self, seq):
+        # map each int to a char and make a 1D LongTensor
+        return torch.tensor([self.int_to_cha[integer] for integer in seq])
 
 
 class TinyShakeDataset(torch.utils.data.Dataset):
     """Tiny Shakespeare Dataset Class."""
 
     def __init__(self, data_path: str, split: str, block_size: int):
-        
+
         super().__init__()
-        
+
         self.data_path = data_path
         self.split = split
         self.block_size = block_size
@@ -77,7 +80,8 @@ class TinyShakeDataset(torch.utils.data.Dataset):
         return data, characters, vocab_size
 
     def __len__(self):
-        return len(self.data)
+        # last starting index that permits a full block plus target shift
+        return max(0, len(self.data) - self.block_size - 1)
 
     def __getitem__(self, idx: int):
         """
@@ -88,7 +92,7 @@ class TinyShakeDataset(torch.utils.data.Dataset):
             split (str): "train" or "val"
 
         Returns:
-            
+            Tuple[List[str], List[str]]: input block characters and target block characters
         """
 
         x = np.array([self.data[idx + i] for i in range(self.block_size)])

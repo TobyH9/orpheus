@@ -3,9 +3,9 @@ import torch.nn as nn
 from torch.nn import functional as F
 from pathlib import Path
 
-from transformer_layer import TransformerLayer
+from .transformer_layer import TransformerLayer
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 BASE_DIR = Path(__file__).parent.parent.parent
 
@@ -61,7 +61,10 @@ class NanoGPT(nn.Module):
         self.lm_head = nn.Linear(n_embed, vocab_size)
         self.optimiser = torch.optim.AdamW(self.parameters(), lr=1e-3)
 
-    def forward(self, batch=torch.Tensor, targets=None):
+    def forward(self, batch: torch.Tensor, targets: torch.Tensor | None = None):
+        # ensure indices are longs for embedding lookup
+        if batch.dtype != torch.long:
+            batch = batch.long()
         B, T = batch.shape  # B = batch_size, T = block_size
         C = self.n_embed
         # batch and targets are both (B,T) tensor of integers
@@ -69,7 +72,7 @@ class NanoGPT(nn.Module):
             batch
         )  # replaces each token (int) in each sequence with an embedding vector such that tok_emb is (B,T,C)
         pos_emb = self.positional_embedding_table(
-            torch.arange(T, device=device)
+            torch.arange(T, device=batch.device)
         )  # (T,C)
         x = (
             tok_emb + pos_emb
@@ -81,6 +84,8 @@ class NanoGPT(nn.Module):
         if targets is None:
             loss = None
         else:
+            if targets.dtype != torch.long:
+                targets = targets.long()
             B, T, C = logits.shape
             logits = logits.view(B * T, C)
             targets = targets.view(B * T)
@@ -88,8 +93,11 @@ class NanoGPT(nn.Module):
 
         return logits, loss
 
-    def generate(self, idx: int, max_new_tokens: int):
+    def generate(self, idx: torch.Tensor, max_new_tokens: int):
         # idx is (B,T) array of indices in the current context
+        model_device = next(self.parameters()).device
+        if idx.device != model_device:
+            idx = idx.to(model_device)
         for _ in range(max_new_tokens):
             # crop idx to the last block_size tokens (to be compatible with the postional encodings)
             idx_cond = idx[:, -self.block_size :]
@@ -107,7 +115,8 @@ class NanoGPT(nn.Module):
             idx = torch.concat((idx, idx_next), dim=1)  # (B, T+1)
         return idx
 
-    @torch.no_grad()
+
+"""    @torch.no_grad()
     def estimate_loss(self):
         out = {}
         model.eval()
@@ -119,4 +128,4 @@ class NanoGPT(nn.Module):
                 losses[k] = loss.item()
             out[split] = losses.mean()
         model.train()
-        return out
+        return out"""
