@@ -1,11 +1,7 @@
-import gzip
-import random
-
 import torch
 import numpy as np
 
 import lightning as pl
-from omegaconf import DictConfig
 
 
 class CollateFn:
@@ -75,7 +71,9 @@ class TinyShakeDataset(torch.utils.data.Dataset):
         elif self.split == "val":
             data = val_data
         else:
-            raise ValueError("split must be 'train' or 'val', invalid entry was provided.")
+            raise ValueError(
+                "split must be 'train' or 'val', invalid entry was provided."
+            )
 
         return data, characters, vocab_size
 
@@ -104,8 +102,8 @@ class TinyShakeDataModule(pl.LightningDataModule):
     """PyTorch Lightning DataModule for STRING protein interaction data."""
 
     def __init__(
-        self, 
-        data_path: str, 
+        self,
+        data_path: str,
         block_size: int,
         batch_size: int,
     ):
@@ -116,21 +114,26 @@ class TinyShakeDataModule(pl.LightningDataModule):
         self.batch_size = batch_size
 
         self.train_dataset = TinyShakeDataset(
-            data_path = self.data_path, 
-            split= 'train',
-            block_size= self.block_size,
+            data_path=self.data_path,
+            split="train",
+            block_size=self.block_size,
         )
 
         self.val_dataset = TinyShakeDataset(
-            data_path = self.data_path, 
-            split= 'val',
-            block_size= self.block_size,
+            data_path=self.data_path,
+            split="val",
+            block_size=self.block_size,
         )
 
-        self.characters = sorted(set(self.train_dataset.characters + self.val_dataset.characters))
-        self.char_to_int = {ch: i for i, ch in enumerate(self.characters)} # the mapping from the characters in the dataset to integers
-        self.int_to_char = {i: ch for i, ch in enumerate(self.characters)} # the mapping from the integers to the characters in the dataset
-
+        self.characters = sorted(
+            set(self.train_dataset.characters + self.val_dataset.characters)
+        )
+        self.char_to_int = {
+            ch: i for i, ch in enumerate(self.characters)
+        }  # the mapping from the characters in the dataset to integers
+        self.int_to_char = {
+            i: ch for i, ch in enumerate(self.characters)
+        }  # the mapping from the integers to the characters in the dataset
 
     def setup(self, stage: str = None):
         """Set up datasets for training and validation."""
@@ -144,9 +147,10 @@ class TinyShakeDataModule(pl.LightningDataModule):
             self.train_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            collate_fn=CollateFn(char_to_int= self.char_to_int, 
-                                 int_to_char= self.int_to_char),
-            )
+            collate_fn=CollateFn(
+                char_to_int=self.char_to_int, int_to_char=self.int_to_char
+            ),
+        )
 
     def val_dataloader(self):
         """Create validation data loader."""
@@ -156,6 +160,7 @@ class TinyShakeDataModule(pl.LightningDataModule):
             self.val_dataset,
             batch_size=self.batch_size,
             shuffle=True,
-            collate_fn=CollateFn(char_to_int= self.char_to_int, 
-                                 int_to_char= self.int_to_char),
-            )
+            collate_fn=CollateFn(
+                char_to_int=self.char_to_int, int_to_char=self.int_to_char
+            ),
+        )

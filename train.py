@@ -4,13 +4,12 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from src.nanogpt.nanogpt import NanoGPT
-from src.nanogpt.data.data import TinyShakeDataModule
-from src.nanogpt.data.data import CollateFn
+from orpheus.orpheus import Orpheus
+from src.orpheus.data.data import TinyShakeDataModule
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Train NanoGPT")
+    parser = argparse.ArgumentParser(description="Train Orpheus")
     parser.add_argument(
         "--resume-from",
         "-r",
@@ -40,7 +39,7 @@ def main():
             ckpt_cfg = tmp["config"]
             start_step = int(tmp.get("step", 0))
 
-    model = NanoGPT(
+    model = Orpheus(
         block_size=(ckpt_cfg.get("block_size") if ckpt_cfg else 256),
         vocab_size=(ckpt_cfg.get("vocab_size") if ckpt_cfg else 65),
         n_embed=(ckpt_cfg.get("n_embed") if ckpt_cfg else 380),
@@ -60,7 +59,7 @@ def main():
         print(f"Loaded checkpoint state. Starting at step {start_step}.")
 
     data_module = TinyShakeDataModule(
-        data_path="/Users/tobyhallett/Desktop/nanogpt/resources/tiny_shakespeare.txt",
+        data_path="/Users/tobyhallett/Desktop/orpheus/resources/tiny_shakespeare.txt",
         block_size=256,
         batch_size=2,
     )
@@ -85,7 +84,7 @@ def main():
     # Save final checkpoint
     ckpt_dir = Path("checkpoints")
     ckpt_dir.mkdir(parents=True, exist_ok=True)
-    ckpt_path = ckpt_dir / "nanogpt_final.pt"
+    ckpt_path = ckpt_dir / "orpheus_final.pt"
     torch.save(
         {
             "model_state": model.state_dict(),
@@ -114,7 +113,7 @@ def main():
         raise ValueError(f"Unknown token id in output: {e.args[0]} (vocab size={len(decoder)})")
 
     # Save to file
-    out_path = Path("/Users/tobyhallett/Desktop/nanogpt/outputs/output1.txt")
+    out_path = Path("/Users/tobyhallett/Desktop/orpheus/outputs/output1.txt")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(text, encoding="utf-8")
 
