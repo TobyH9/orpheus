@@ -59,7 +59,7 @@ def main():
         print(f"Loaded checkpoint state. Starting at step {start_step}.")
 
     data_module = TinyShakeDataModule(
-        data_path="/Users/tobyhallett/Desktop/orpheus/resources/tiny_shakespeare.txt",
+        data_path="add path to resources here",
         block_size=256,
         batch_size=2,
     )
@@ -113,7 +113,7 @@ def main():
         raise ValueError(f"Unknown token id in output: {e.args[0]} (vocab size={len(decoder)})")
 
     # Save to file
-    out_path = Path("/Users/tobyhallett/Desktop/orpheus/outputs/output1.txt")
+    out_path = Path("add your output path here")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(text, encoding="utf-8")
 
