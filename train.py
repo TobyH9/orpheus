@@ -4,7 +4,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from orpheus.orpheus import Orpheus
+from src.orpheus.orpheus import Orpheus
 from src.orpheus.data.data import TinyShakeDataModule
 
 
