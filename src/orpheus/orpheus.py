@@ -5,7 +5,7 @@ from pathlib import Path
 import pytorch_lightning as pl
 from omegaconf import DictConfig
 
-from transformer_layer import TransformerLayer
+from .transformer_layer import TransformerLayer
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -93,6 +93,7 @@ class Orpheus(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(
+            self.parameters(),
             lr=self.cfg.model.optimizer.lr,
             betas=self.cfg.model.optimizer.adam_betas,
             eps=self.cfg.model.optimizer.adam_eps,

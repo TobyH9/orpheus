@@ -23,12 +23,7 @@ This is an implementation of Andrej Kaparthy's nanogpt.
 	uv venv .venv
 	source .venv/bin/activate
 	```
-3. Install dependencies from `pyproject.toml`:
-	```bash
-	uv sync
-	```
-
-Optional: install the package in editable mode (so local changes are picked up):
+3. Install from pyproject.toml
 ```bash
 uv pip install -e .
 ```
