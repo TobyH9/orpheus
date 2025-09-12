@@ -27,7 +27,7 @@ class CollateFn:
 
     def convert_to_characters(self, seq):
         # map each int to a char and make a 1D LongTensor
-        return torch.tensor([self.int_to_cha[integer] for integer in seq])
+        return torch.tensor([self.int_to_char[integer] for integer in seq])
 
 
 class TinyShakeDataset(torch.utils.data.Dataset):
@@ -134,10 +134,6 @@ class TinyShakeDataModule(pl.LightningDataModule):
         self.int_to_char = {
             i: ch for i, ch in enumerate(self.characters)
         }  # the mapping from the integers to the characters in the dataset
-
-    def setup(self, stage: str = None):
-        """Set up datasets for training and validation."""
-        pass
 
     def train_dataloader(self):
         """Create training data loader."""
